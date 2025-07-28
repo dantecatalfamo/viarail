@@ -27,7 +27,7 @@ type StationTime struct {
 	TimeDiff
 	Station   string    `json:"station"`
 	Code      string    `json:"code"`
-	ETA       string    `jsob:"eta"`
+	ETA       *string   `jsob:"eta"`
 	Arrival   *TimeDiff `json:"arrival"`
 	Departure *TimeDiff `json:"departure"`
 	Diff      string    `json:"diff"`
@@ -141,6 +141,7 @@ func insertData(db *sql.DB, data map[string]Train) error {
 		for _, station := range details.Times {
 			var departure_estimated, departure_scheduled *string
 			var arrival_estimated, arrival_scheduled *string
+			var eta *string
 			if station.Estimated != nil && *station.Estimated == mdash {
 				station.Estimated = nil
 			}
@@ -164,6 +165,9 @@ func insertData(db *sql.DB, data map[string]Train) error {
 					arrival_scheduled = station.Arrival.Scheduled
 				}
 			}
+			if station.ETA != nil && *station.ETA != mdash {
+				eta = station.ETA
+			}
 
 			if _, err := tx.Exec(`
 				INSERT INTO station_times (
@@ -185,7 +189,7 @@ func insertData(db *sql.DB, data map[string]Train) error {
 				station.Code,
 				station.Estimated,
 				station.Scheduled,
-				station.ETA,
+				eta,
 				departure_estimated,
 				departure_scheduled,
 				arrival_estimated,
